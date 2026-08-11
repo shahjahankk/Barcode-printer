@@ -75,7 +75,8 @@ export function AuthGate({ onUnlocked }: AuthGateProps) {
       <div className="w-full max-w-sm rounded-xl border border-stone-200 bg-white/90 p-6 shadow-sm backdrop-blur">
         <p className="font-display text-2xl font-bold tracking-tight">LabelPress</p>
         <p className="mt-1 text-sm text-stone-600">
-          Sign in to save and load barcode labels from the server.
+          Opened from PetZone? You should sign in automatically.
+          Opening this link alone requires your LabelPress username and password.
         </p>
 
         <form className="mt-6 flex flex-col gap-4" onSubmit={handleSubmit}>
