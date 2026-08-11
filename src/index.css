@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Syne", "IBM Plex Sans", sans-serif;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background-color: #f3f1ec;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 10% -10%, #d8ebe6 0%, transparent 55%),
+      radial-gradient(ellipse 60% 40% at 100% 0%, #e8e0d4 0%, transparent 50%),
+      linear-gradient(180deg, #f7f5f0 0%, #ebe7df 100%);
+    background-attachment: fixed;
+  }
+
+  #root {
+    min-height: 100vh;
+  }
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.print-only {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: var(--label-w, 2.2in) var(--label-h, 1in);
+    margin: 0 !important;
+  }
+
+  html,
+  body,
+  #root {
+    width: var(--label-w, 2.2in) !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    background-image: none !important;
+    overflow: visible !important;
+  }
+
+  .no-print,
+  .app-shell {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .print-label {
+    width: var(--label-w, 2.2in) !important;
+    height: var(--label-h, 1in) !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    page-break-after: always;
+    break-after: page;
+    overflow: hidden !important;
+  }
+
+  .print-label-image {
+    display: block !important;
+    width: var(--label-w, 2.2in) !important;
+    height: var(--label-h, 1in) !important;
+    max-width: none !important;
+    max-height: none !important;
+    object-fit: fill !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-label:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+}
