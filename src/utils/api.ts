@@ -1,4 +1,6 @@
-const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5055').replace(/\/$/, '')
+// Same-origin by default (API + React served by one Node app on cPanel).
+// Override with VITE_API_URL only if API is on a different host.
+const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
 
 const TOKEN_KEY = 'labelpress_jwt'
 const USER_KEY = 'labelpress_user'

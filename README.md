@@ -1,23 +1,22 @@
-# LabelPress — Barcode Label Generator
+# LabelPress — barcode labels
 
-Barcode label generator (Code128 / EAN-13 / UPC-A) with live preview, batch, PNG/ZIP download, and print.
+React UI is built into [`../barcode-backend/public`](../barcode-backend/public) and served by the **same** Node app as the API (cPanel Node). Database stays separate from PetZone POS.
 
-Persistence is via the **separate** [`barcode-backend`](../barcode-backend) API + MySQL database (not the POS backend).
-
-## Local development
-
-1. Start API (see [`../barcode-backend/README.md`](../barcode-backend/README.md)).
-2. Copy `.env.example` → `.env` and set `VITE_API_URL`.
-3. `npm install && npm run dev`
-
-## Build / cPanel static host
+## Develop UI
 
 ```bash
-VITE_API_URL=https://barcode-api.yourdomain.com npm run build
+# API
+cd ../barcode-backend && npm start
+
+# UI with HMR — set VITE_API_URL=http://localhost:5055
+npm install && npm run dev
 ```
 
-Upload `dist/` to `barcode.yourdomain.com`.
+## Production build (into barcode-backend/public)
 
-## POS integration
+```bash
+npm install
+npm run build
+```
 
-Open from Admin / Warehouse menu. POS mints a short-lived SSO token; this app exchanges it at `/?sso=...`.
+Then start `barcode-backend` only — one URL for UI + API.
