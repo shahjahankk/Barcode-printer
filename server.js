@@ -70,7 +70,25 @@ getPool()
 app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
+  // Allow POS (Admin/Warehouse) to embed LabelPress in an iframe
+  frameguard: false,
 }));
+
+app.use((req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    [
+      "frame-ancestors 'self'",
+      'https://*.petzone.pk',
+      'https://petzone.pk',
+      'https://petzone-pos-frontend.vercel.app',
+      'https://*.vercel.app',
+      'http://localhost:3000',
+      'http://127.0.0.1:3000',
+    ].join(' '),
+  );
+  next();
+});
 
 const configuredCorsOrigins = (process.env.CORS_ORIGIN || '')
   .split(',')
