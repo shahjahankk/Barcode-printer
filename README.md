@@ -39,8 +39,18 @@ npm run migrate
 npm run seed
 ```
 
-Check: `https://barcode-printer.petzone.pk/api/health`  
-Expect `"success": true`, `"database": "up"`, `"files": { "index": true, ... }`
+## Important (cPanel blank page)
+
+Do **not** put Vite `index.html` in the app root. Apache will serve `/src/main.tsx` and the page stays blank.
+Dev entry is `app.html`; production UI is only `public/index.html` (served by Node).
+
+After pull on the server, if an old root `index.html` still exists:
+
+```bash
+rm -f /home/petzonep/barcode-printer.petzone.pk/index.html
+```
+
+Then Restart the Node app.
 
 ## Local development
 

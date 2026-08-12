@@ -7,7 +7,7 @@
     "start": "node server.js",
     "cpanel": "node server.js",
     "dev:server": "node server.js",
-    "dev": "vite",
+    "dev": "vite --open /app.html",
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",

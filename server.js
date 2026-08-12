@@ -50,11 +50,15 @@ function sendAsset(res, absolutePath) {
   if (!fs.existsSync(absolutePath)) {
     return res.status(404).type('text').send('Not found');
   }
-  const type = contentTypeFor(absolutePath);
-  if (type) res.setHeader('Content-Type', type);
+  // Buffer + explicit type (sendFile often becomes octet-stream on LiteSpeed/cPanel)
+  const type = contentTypeFor(absolutePath) || 'application/octet-stream';
+  const body = fs.readFileSync(absolutePath);
+  res.status(200);
+  res.setHeader('Content-Type', type);
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Cache-Control', 'public, max-age=3600');
-  return res.sendFile(absolutePath);
+  res.setHeader('Content-Length', String(body.length));
+  return res.end(body);
 }
 
 // Never block listen on DB — same pattern as Queue Management / Laboratory

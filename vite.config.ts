@@ -1,21 +1,55 @@
+import path from 'node:path'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import fs from 'node:fs'
+import type { Plugin } from 'vite'
 
-// UI builds into public/ (committed) — cPanel only runs node server.js
-// Production base /api/static/ avoids Apache stealing /assets before Passenger (Laboratory pattern)
+// UI builds into public/ (committed) — cPanel only runs node server.js.
+// Do NOT keep index.html at repo root: Apache/LiteSpeed serves it instead of Node
+// (blank page + /src/main.tsx as octet-stream). Dev/build entry is app.html.
 const isBuild = process.env.npm_lifecycle_event === 'build'
 
+function classicScriptPlugin(): Plugin {
+  return {
+    name: 'classic-script-no-module',
+    transformIndexHtml(html) {
+      return html
+        .replace(/\s+type="module"/g, '')
+        .replace(/\s+crossorigin/g, '')
+    },
+    closeBundle() {
+      const from = path.resolve('public/app.html')
+      const to = path.resolve('public/index.html')
+      if (fs.existsSync(from)) {
+        fs.renameSync(from, to)
+      }
+    },
+  }
+}
+
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), classicScriptPlugin()],
   base: isBuild ? '/api/static/' : '/',
-  // Static assets for Vite (favicon) — must not collide with outDir `public`
   publicDir: 'static',
   build: {
     outDir: 'public',
     emptyOutDir: true,
+    cssCodeSplit: false,
+    modulePreload: false,
+    rollupOptions: {
+      input: path.resolve('app.html'),
+      output: {
+        format: 'iife',
+        name: 'LabelPress',
+        entryFileNames: 'assets/app.js',
+        chunkFileNames: 'assets/[name].js',
+        assetFileNames: 'assets/[name][extname]',
+      },
+    },
   },
   server: {
+    open: '/app.html',
     proxy: {
       '/api': 'http://localhost:5055',
     },
