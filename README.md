@@ -14,8 +14,23 @@ One Git folder / one cPanel Node app — same pattern as **Queue Management** an
 3. Env vars (see `.env.example`). Important:
    - `BARCODE_APP_URL=https://barcode-printer.petzone.pk`
    - Do **not** set `PORT` (cPanel sets it)
-4. **Run NPM Install**
-5. **Restart** (no `build` step on cPanel)
+4. Install **production** packages only (UI is already in `public/` — do not install Vite/TypeScript on cPanel):
+
+```bash
+source /home/petzonep/nodevenv/barcode-printer.petzone.pk/20/bin/activate
+cd /home/petzonep/barcode-printer.petzone.pk
+
+# If you hit ENOTEMPTY (stuck typescript rename), clean then reinstall:
+rm -rf node_modules
+rm -rf /home/petzonep/nodevenv/barcode-printer.petzone.pk/20/lib/node_modules/typescript
+rm -rf /home/petzonep/nodevenv/barcode-printer.petzone.pk/20/lib/node_modules/.typescript-*
+rm -rf /home/petzonep/nodevenv/barcode-printer.petzone.pk/20/lib/node_modules/vite
+rm -rf /home/petzonep/nodevenv/barcode-printer.petzone.pk/20/lib/node_modules/.vite-*
+
+NODE_ENV=production npm install --omit=dev
+```
+
+5. **Restart** the Node app (no `build` step on cPanel)
 
 First-time DB (SSH or once locally against live DB):
 
