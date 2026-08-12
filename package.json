@@ -1,28 +1,39 @@
 {
-  "name": "barcode-printer",
-  "private": true,
+  "name": "petzone-barcode-labelpress",
   "version": "1.0.0",
+  "description": "PetZone LabelPress — barcode labels API + UI (cPanel ready, same pattern as QMS/Laboratory)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "cpanel": "node server.js",
+    "dev:server": "node server.js",
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
     "seed": "node scripts/seed.js",
     "migrate": "node scripts/migrate.js"
   },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "keywords": [
+    "petzone",
+    "barcode",
+    "labels",
+    "labelpress"
+  ],
+  "author": "PetZone Development Team",
+  "license": "MIT",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
-    "jsbarcode": "^3.12.3",
+    "helmet": "^8.2.0",
     "jsonwebtoken": "^9.0.2",
-    "jszip": "^3.10.1",
-    "mysql2": "^3.11.0",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "morgan": "^1.11.0",
+    "mysql2": "^3.11.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
@@ -31,7 +42,11 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
+    "jsbarcode": "^3.12.3",
+    "jszip": "^3.10.1",
     "oxlint": "^1.75.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.2",
     "vite": "^8.2.0"
