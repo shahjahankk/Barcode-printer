@@ -15,6 +15,7 @@ const labelsRoutes = require('./routes/labels');
 const app = express();
 const PORT = process.env.PORT || 5055;
 const publicDir = path.join(__dirname, 'public');
+const assetsDir = path.join(publicDir, 'assets');
 
 function sendPublic(res, fileName) {
   const full = path.join(publicDir, fileName);
@@ -25,7 +26,35 @@ function sendPublic(res, fileName) {
 <p><a href="/api/health">/api/health</a></p>
 </body></html>`);
   }
+  res.type('html');
   return res.sendFile(full);
+}
+
+function contentTypeFor(filePath) {
+  const ext = path.extname(filePath).toLowerCase();
+  if (ext === '.js' || ext === '.mjs' || ext === '.cjs') {
+    return 'application/javascript; charset=utf-8';
+  }
+  if (ext === '.css') return 'text/css; charset=utf-8';
+  if (ext === '.svg') return 'image/svg+xml';
+  if (ext === '.json') return 'application/json; charset=utf-8';
+  if (ext === '.html') return 'text/html; charset=utf-8';
+  if (ext === '.png') return 'image/png';
+  if (ext === '.jpg' || ext === '.jpeg') return 'image/jpeg';
+  if (ext === '.woff2') return 'font/woff2';
+  if (ext === '.woff') return 'font/woff';
+  return null;
+}
+
+function sendAsset(res, absolutePath) {
+  if (!fs.existsSync(absolutePath)) {
+    return res.status(404).type('text').send('Not found');
+  }
+  const type = contentTypeFor(absolutePath);
+  if (type) res.setHeader('Content-Type', type);
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  return res.sendFile(absolutePath);
 }
 
 // Never block listen on DB — same pattern as Queue Management / Laboratory
@@ -76,8 +105,12 @@ async function healthHandler(req, res) {
   }
 
   const indexOk = fs.existsSync(path.join(publicDir, 'index.html'));
-  const assetsDir = path.join(publicDir, 'assets');
   const assetsOk = fs.existsSync(assetsDir);
+  let sampleJs = null;
+  if (assetsOk) {
+    const js = fs.readdirSync(assetsDir).find((f) => f.endsWith('.js'));
+    sampleJs = js || null;
+  }
   const ok = db === 'up' && indexOk;
 
   res.status(ok ? 200 : 503).json({
@@ -91,6 +124,7 @@ async function healthHandler(req, res) {
     files: {
       index: indexOk,
       assets: assetsOk,
+      sampleJs,
     },
     assetsVia: '/api/static/*',
   });
@@ -103,8 +137,31 @@ app.use('/api/auth', authRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/labels', labelsRoutes);
 
-// Apache/LiteSpeed often 404s /assets before Passenger — serve under /api/static
-app.use('/api/static', express.static(publicDir, { index: false, maxAge: '1h' }));
+// Explicit asset routes with forced MIME (cPanel often serves .js as octet-stream)
+app.get('/api/static/assets/:file', (req, res) => {
+  const name = path.basename(String(req.params.file || ''));
+  if (!name || name !== req.params.file) return res.status(400).end();
+  return sendAsset(res, path.join(assetsDir, name));
+});
+
+app.get('/api/static/:file', (req, res, next) => {
+  const name = path.basename(String(req.params.file || ''));
+  if (!name || name !== req.params.file || name === 'assets') return next();
+  return sendAsset(res, path.join(publicDir, name));
+});
+
+app.use(
+  '/api/static',
+  express.static(publicDir, {
+    index: false,
+    maxAge: '1h',
+    setHeaders(res, filePath) {
+      const type = contentTypeFor(filePath);
+      if (type) res.setHeader('Content-Type', type);
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+    },
+  }),
+);
 
 app.get('/', (req, res) => sendPublic(res, 'index.html'));
 
