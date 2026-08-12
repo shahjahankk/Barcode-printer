@@ -1,5 +1,5 @@
 /**
- * Create LabelPress tables on the configured DB (petzonep_barcode_labelpress).
+ * Create LabelPress tables on the configured DB (petzonep_barcode_printer).
  * Usage: node scripts/migrate.js
  */
 require('dotenv').config()
@@ -13,7 +13,7 @@ async function migrate() {
     port: Number(process.env.DB_PORT || 3306),
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME || 'petzonep_barcode_labelpress',
+    database: process.env.DB_NAME || 'petzonep_barcode_printer',
     multipleStatements: true,
   }
 

@@ -9,7 +9,7 @@ function getPool() {
     port: Number(process.env.DB_PORT || 3306),
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'petzonep_barcode_labelpress',
+    database: process.env.DB_NAME || 'petzonep_barcode_printer',
     waitForConnections: true,
     connectionLimit: 10,
     namedPlaceholders: true,

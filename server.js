@@ -31,7 +31,7 @@ function sendPublic(res, fileName) {
 // Never block listen on DB — same pattern as Queue Management / Laboratory
 getPool()
   .query('SELECT 1')
-  .then(() => console.log('MySQL connected:', process.env.DB_NAME || 'petzonep_barcode_labelpress'))
+  .then(() => console.log('MySQL connected:', process.env.DB_NAME || 'petzonep_barcode_printer'))
   .catch((err) => console.error('MySQL connection failed:', err.message));
 
 app.use(helmet({

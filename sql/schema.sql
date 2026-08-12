@@ -1,7 +1,7 @@
--- LabelPress tables for cPanel DB: petzonep_barcode_labelpress
+-- LabelPress tables for cPanel DB: petzonep_barcode_printer
 -- Use same MySQL user as queue-management. After tables exist: npm run seed
 
-USE petzonep_barcode_labelpress;
+USE petzonep_barcode_printer;
 
 CREATE TABLE IF NOT EXISTS bp_users (
   id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
