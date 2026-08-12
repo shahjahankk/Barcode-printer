@@ -101,7 +101,9 @@ router.post('/login', async (req, res) => {
 router.post('/sso/mint', async (req, res) => {
   try {
     const secret = req.headers['x-barcode-sso-secret']
-    if (!secret || secret !== process.env.SSO_SHARED_SECRET) {
+    const expected =
+      process.env.SSO_SHARED_SECRET || 'petzone-barcode-sso-shared-secret'
+    if (!secret || secret !== expected) {
       return res.status(401).json({ success: false, message: 'Invalid SSO secret' })
     }
 
@@ -126,7 +128,10 @@ router.post('/sso/mint', async (req, res) => {
       }
     )
 
-    const appUrl = (process.env.BARCODE_APP_URL || '').replace(/\/$/, '')
+    const appUrl = (process.env.BARCODE_APP_URL || 'https://barcode-printer.petzone.pk').replace(
+  /\/$/,
+  '',
+)
     const ssoUrl = appUrl ? `${appUrl}/?sso=${encodeURIComponent(rawToken)}` : null
 
     return res.json({
