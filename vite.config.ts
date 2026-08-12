@@ -13,10 +13,25 @@ const isBuild = process.env.npm_lifecycle_event === 'build'
 function classicScriptPlugin(): Plugin {
   return {
     name: 'classic-script-no-module',
-    transformIndexHtml(html) {
-      return html
-        .replace(/\s+type="module"/g, '')
-        .replace(/\s+crossorigin/g, '')
+    transformIndexHtml: {
+      order: 'post',
+      handler(html) {
+        // Modules are deferred by default; classic scripts in <head> run before #root exists (React #299).
+        let next = html
+          .replace(/\s+type="module"/g, '')
+          .replace(/\s+crossorigin(?:="[^"]*")?/g, '')
+          .replace(/<script(\s)(?![^>]*\bdefer\b)/g, '<script defer$1')
+
+        const scriptTags: string[] = []
+        next = next.replace(/<script\b[^>]*><\/script>/gi, (tag) => {
+          scriptTags.push(tag)
+          return ''
+        })
+        if (scriptTags.length) {
+          next = next.replace(/<\/body>/i, `${scriptTags.join('\n')}\n</body>`)
+        }
+        return next
+      },
     },
     closeBundle() {
       const from = path.resolve('public/app.html')
@@ -27,6 +42,7 @@ function classicScriptPlugin(): Plugin {
     },
   }
 }
+
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), classicScriptPlugin()],
