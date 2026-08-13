@@ -6,7 +6,9 @@ import { downloadLabelPng } from '../utils/download'
 interface BatchListProps {
   items: LabelItem[]
   search: string
+  editingId: string | null
   onSearchChange: (value: string) => void
+  onEdit: (item: LabelItem) => void
   onRemove: (id: string) => void
   onDownloadAll: (items: LabelItem[]) => void
   onPrint: (items: LabelItem[]) => void | Promise<void>
@@ -41,7 +43,9 @@ function Thumbnail({ item }: { item: LabelItem }) {
 export function BatchList({
   items,
   search,
+  editingId,
   onSearchChange,
+  onEdit,
   onRemove,
   onDownloadAll,
   onPrint,
@@ -136,7 +140,11 @@ export function BatchList({
           {filtered.map((item) => (
             <li
               key={item.id}
-              className="flex items-center gap-3 rounded-md border border-stone-200 bg-white px-3 py-2"
+              className={`flex items-center gap-3 rounded-md border px-3 py-2 ${
+                editingId === item.id
+                  ? 'border-teal-500 bg-teal-50/70 ring-1 ring-teal-500/30'
+                  : 'border-stone-200 bg-white'
+              }`}
             >
               <div className="shrink-0 rounded border border-stone-100 bg-white p-1">
                 <Thumbnail item={item} />
@@ -151,6 +159,13 @@ export function BatchList({
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-1 no-print">
+                <button
+                  type="button"
+                  onClick={() => onEdit(item)}
+                  className="rounded px-2 py-1 text-xs font-medium text-stone-700 hover:bg-stone-100"
+                >
+                  {editingId === item.id ? 'Editing' : 'Edit'}
+                </button>
                 <button
                   type="button"
                   onClick={() => handleDownloadOne(item)}

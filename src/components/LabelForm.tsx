@@ -4,8 +4,10 @@ interface LabelFormProps {
   draft: LabelDraft
   error: string | null
   nextSku: number
+  editing: boolean
   onChange: (patch: Partial<LabelDraft>) => void
   onAdd: () => void
+  onCancel: () => void
 }
 
 const FORMATS: { value: BarcodeFormat; label: string }[] = [
@@ -18,8 +20,10 @@ export function LabelForm({
   draft,
   error,
   nextSku,
+  editing,
   onChange,
   onAdd,
+  onCancel,
 }: LabelFormProps) {
   return (
     <form
@@ -67,7 +71,7 @@ export function LabelForm({
           type="text"
           value={draft.sku}
           onChange={(e) => onChange({ sku: e.target.value })}
-          placeholder={`Leave blank to use ${nextSku}`}
+          placeholder={editing ? 'Barcode / SKU' : `Leave blank to use ${nextSku}`}
           className="rounded-md border border-stone-300 bg-white px-3 py-2 text-stone-900 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20"
           inputMode={draft.format === 'CODE128' ? 'text' : 'numeric'}
         />
@@ -98,12 +102,23 @@ export function LabelForm({
         </select>
       </div>
 
-      <button
-        type="submit"
-        className="mt-1 rounded-md bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-600/40"
-      >
-        Add to list
-      </button>
+      <div className="mt-1 flex flex-col gap-2">
+        <button
+          type="submit"
+          className="rounded-md bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-600/40"
+        >
+          {editing ? 'Save changes' : 'Add to list'}
+        </button>
+        {editing && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-md border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-50"
+          >
+            Cancel edit
+          </button>
+        )}
+      </div>
     </form>
   )
 }

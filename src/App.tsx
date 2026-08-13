@@ -53,6 +53,7 @@ export default function App() {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle')
   const [loaded, setLoaded] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const saveTimer = useRef<number | null>(null)
 
   useEffect(() => {
@@ -117,6 +118,29 @@ export default function App() {
     setSubmitError(null)
   }
 
+  function emptyDraft(format: LabelDraft['format'] = 'CODE128'): LabelDraft {
+    return { productName: '', price: '', sku: '', format }
+  }
+
+  function handleCancelEdit() {
+    setEditingId(null)
+    setDraft(emptyDraft(draft.format))
+    setSubmitError(null)
+  }
+
+  function handleEdit(item: LabelItem) {
+    setEditingId(item.id)
+    setDraft({
+      productName: item.productName,
+      price: item.price || '',
+      sku: item.code,
+      format: item.format,
+    })
+    setSize(clampSize({ widthIn: item.widthIn, heightIn: item.heightIn }))
+    setSubmitError(null)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   function handleAdd() {
     const name = draft.productName.trim()
     if (!name) {
@@ -124,11 +148,18 @@ export default function App() {
       return
     }
 
+    const editingItem = editingId
+      ? items.find((item) => item.id === editingId)
+      : null
     const usingAuto = !draft.sku.trim()
-    const code = usingAuto ? String(nextSku) : draft.sku.trim()
+    const code = usingAuto
+      ? editingItem
+        ? editingItem.code
+        : String(nextSku)
+      : draft.sku.trim()
     const error = validateBarcodeInput(draft.format, code)
 
-    if (usingAuto && (draft.format === 'EAN13' || draft.format === 'UPC')) {
+    if (usingAuto && !editingItem && (draft.format === 'EAN13' || draft.format === 'UPC')) {
       setSubmitError(
         `Enter a valid ${draft.format === 'EAN13' ? '12-digit EAN-13' : '11-digit UPC-A'} code (auto SKU only works with Code128).`,
       )
@@ -137,6 +168,28 @@ export default function App() {
 
     if (error) {
       setSubmitError(error)
+      return
+    }
+
+    if (editingId) {
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === editingId
+            ? {
+                ...item,
+                productName: name,
+                price: draft.price.trim(),
+                code,
+                format: draft.format,
+                widthIn: size.widthIn,
+                heightIn: size.heightIn,
+              }
+            : item,
+        ),
+      )
+      setEditingId(null)
+      setDraft(emptyDraft(draft.format))
+      setSubmitError(null)
       return
     }
 
@@ -154,6 +207,11 @@ export default function App() {
     if (usingAuto) setNextSku((n) => n + 1)
     setDraft((prev) => ({ ...prev, productName: '', price: '', sku: '' }))
     setSubmitError(null)
+  }
+
+  function handleRemove(id: string) {
+    setItems((prev) => prev.filter((i) => i.id !== id))
+    if (editingId === id) handleCancelEdit()
   }
 
   async function handleSave() {
@@ -233,7 +291,7 @@ export default function App() {
           <div className="flex flex-col gap-6 rounded-xl border border-stone-200 bg-white/80 p-5 shadow-sm backdrop-blur sm:p-6">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold tracking-wide text-stone-700 uppercase">
-                New label
+                {editingId ? 'Edit label' : 'New label'}
               </h2>
               <button
                 type="button"
@@ -325,8 +383,10 @@ export default function App() {
               draft={draft}
               error={submitError ?? liveError}
               nextSku={nextSku}
+              editing={Boolean(editingId)}
               onChange={updateDraft}
               onAdd={handleAdd}
+              onCancel={handleCancelEdit}
             />
 
             <LabelPreview
@@ -343,8 +403,10 @@ export default function App() {
             <BatchList
               items={items}
               search={search}
+              editingId={editingId}
               onSearchChange={setSearch}
-              onRemove={(id) => setItems((prev) => prev.filter((i) => i.id !== id))}
+              onEdit={handleEdit}
+              onRemove={handleRemove}
               onDownloadAll={handleDownloadAll}
               onPrint={handlePrint}
               onSave={handleSave}
