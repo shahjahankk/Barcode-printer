@@ -27,6 +27,7 @@ function sendPublic(res, fileName) {
 </body></html>`);
   }
   res.type('html');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   return res.sendFile(full);
 }
 
@@ -56,7 +57,12 @@ function sendAsset(res, absolutePath) {
   res.status(200);
   res.setHeader('Content-Type', type);
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('Cache-Control', 'public, max-age=3600');
+  const ext = path.extname(absolutePath).toLowerCase();
+  if (ext === '.html' || ext === '.js' || ext === '.css') {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  } else {
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+  }
   res.setHeader('Content-Length', String(body.length));
   return res.end(body);
 }
@@ -79,12 +85,8 @@ app.use((req, res, next) => {
     'Content-Security-Policy',
     [
       "frame-ancestors 'self'",
-      'https://*.petzone.pk',
-      'https://petzone.pk',
       'https://petzone-pos-frontend.vercel.app',
-      'https://*.vercel.app',
-      'http://localhost:3000',
-      'http://127.0.0.1:3000',
+      
     ].join(' '),
   );
   next();

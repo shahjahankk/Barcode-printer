@@ -22,6 +22,11 @@ function classicScriptPlugin(): Plugin {
           .replace(/\s+crossorigin(?:="[^"]*")?/g, '')
           .replace(/<script(\s)(?![^>]*\bdefer\b)/g, '<script defer$1')
 
+        const bust = `v=${Date.now()}`
+        next = next
+          .replace(/(\/api\/static\/assets\/app\.js)(?:\?[^"]*)?/g, `$1?${bust}`)
+          .replace(/(\/api\/static\/assets\/style\.css)(?:\?[^"]*)?/g, `$1?${bust}`)
+
         const scriptTags: string[] = []
         next = next.replace(/<script\b[^>]*><\/script>/gi, (tag) => {
           scriptTags.push(tag)
