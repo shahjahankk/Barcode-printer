@@ -209,9 +209,11 @@ export default function App() {
     setSubmitError(null)
   }
 
-  function handleRemove(id: string) {
-    setItems((prev) => prev.filter((i) => i.id !== id))
-    if (editingId === id) handleCancelEdit()
+  function handleRemoveMany(ids: string[]) {
+    if (ids.length === 0) return
+    const removing = new Set(ids)
+    setItems((prev) => prev.filter((i) => !removing.has(i.id)))
+    if (editingId && removing.has(editingId)) handleCancelEdit()
   }
 
   async function handleSave() {
@@ -406,7 +408,7 @@ export default function App() {
               editingId={editingId}
               onSearchChange={setSearch}
               onEdit={handleEdit}
-              onRemove={handleRemove}
+              onRemoveMany={handleRemoveMany}
               onDownloadAll={handleDownloadAll}
               onPrint={handlePrint}
               onSave={handleSave}

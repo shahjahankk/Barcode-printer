@@ -9,7 +9,7 @@ interface BatchListProps {
   editingId: string | null
   onSearchChange: (value: string) => void
   onEdit: (item: LabelItem) => void
-  onRemove: (id: string) => void
+  onRemoveMany: (ids: string[]) => void
   onDownloadAll: (items: LabelItem[]) => void
   onPrint: (items: LabelItem[]) => void | Promise<void>
   onSave: () => void
@@ -46,7 +46,7 @@ export function BatchList({
   editingId,
   onSearchChange,
   onEdit,
-  onRemove,
+  onRemoveMany,
   onDownloadAll,
   onPrint,
   onSave,
@@ -54,6 +54,8 @@ export function BatchList({
   saveStatus,
 }: BatchListProps) {
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -65,6 +67,46 @@ export function BatchList({
       return haystack.includes(q)
     })
   }, [items, search])
+
+  // Drop selections whose labels no longer exist (deleted elsewhere / reloaded)
+  useEffect(() => {
+    setSelectedIds((prev) => {
+      const alive = prev.filter((id) => items.some((item) => item.id === id))
+      return alive.length === prev.length ? prev : alive
+    })
+  }, [items])
+
+  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds])
+  const allVisibleSelected =
+    filtered.length > 0 && filtered.every((item) => selectedSet.has(item.id))
+
+  function toggleOne(id: string) {
+    setConfirmingDelete(false)
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    )
+  }
+
+  function toggleAllVisible() {
+    setConfirmingDelete(false)
+    setSelectedIds((prev) => {
+      if (allVisibleSelected) {
+        const visible = new Set(filtered.map((item) => item.id))
+        return prev.filter((id) => !visible.has(id))
+      }
+      return [...new Set([...prev, ...filtered.map((item) => item.id)])]
+    })
+  }
+
+  function clearSelection() {
+    setSelectedIds([])
+    setConfirmingDelete(false)
+  }
+
+  function confirmDelete() {
+    onRemoveMany(selectedIds)
+    clearSelection()
+  }
 
   async function handleDownloadOne(item: LabelItem) {
     setBusyId(item.id)
@@ -127,6 +169,69 @@ export function BatchList({
         />
       </div>
 
+      {filtered.length > 0 && (
+        <div className="flex flex-wrap items-center gap-3 rounded-md border border-stone-200 bg-stone-50 px-3 py-2 no-print">
+          <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-stone-600">
+            <input
+              type="checkbox"
+              checked={allVisibleSelected}
+              onChange={toggleAllVisible}
+              className="h-4 w-4 cursor-pointer accent-teal-700"
+            />
+            Select all{search.trim() ? ' shown' : ''}
+          </label>
+
+          {selectedIds.length > 0 && (
+            <>
+              <span className="text-xs text-stone-500">
+                {selectedIds.length} selected
+              </span>
+              <div className="ml-auto flex items-center gap-2">
+                {confirmingDelete ? (
+                  <>
+                    <span className="text-xs font-medium text-red-700">
+                      Delete {selectedIds.length}{' '}
+                      {selectedIds.length === 1 ? 'label' : 'labels'}?
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmingDelete(false)}
+                      className="rounded-md border border-stone-300 bg-white px-2.5 py-1 text-xs font-medium text-stone-700 hover:bg-stone-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={confirmDelete}
+                      className="rounded-md bg-red-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-red-700"
+                    >
+                      Yes, delete
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={clearSelection}
+                      className="rounded-md border border-stone-300 bg-white px-2.5 py-1 text-xs font-medium text-stone-700 hover:bg-stone-50"
+                    >
+                      Clear
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmingDelete(true)}
+                      className="rounded-md border border-red-600 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 hover:bg-red-100"
+                    >
+                      Delete selected ({selectedIds.length})
+                    </button>
+                  </>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       {items.length === 0 ? (
         <p className="rounded-md border border-dashed border-stone-300 bg-stone-50/80 px-4 py-8 text-center text-sm text-stone-500">
           No labels yet. Fill in the form and click Add to list.
@@ -141,11 +246,20 @@ export function BatchList({
             <li
               key={item.id}
               className={`flex items-center gap-3 rounded-md border px-3 py-2 ${
-                editingId === item.id
-                  ? 'border-teal-500 bg-teal-50/70 ring-1 ring-teal-500/30'
-                  : 'border-stone-200 bg-white'
+                selectedSet.has(item.id)
+                  ? 'border-red-300 bg-red-50/60'
+                  : editingId === item.id
+                    ? 'border-teal-500 bg-teal-50/70 ring-1 ring-teal-500/30'
+                    : 'border-stone-200 bg-white'
               }`}
             >
+              <input
+                type="checkbox"
+                checked={selectedSet.has(item.id)}
+                onChange={() => toggleOne(item.id)}
+                aria-label={`Select ${item.productName}`}
+                className="h-4 w-4 shrink-0 cursor-pointer accent-teal-700 no-print"
+              />
               <div className="shrink-0 rounded border border-stone-100 bg-white p-1">
                 <Thumbnail item={item} />
               </div>
@@ -184,14 +298,6 @@ export function BatchList({
                   className="rounded px-2 py-1 text-xs font-medium text-teal-800 hover:bg-teal-50 disabled:opacity-50"
                 >
                   {busyId === item.id ? '…' : 'Download PNG'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onRemove(item.id)}
-                  aria-label={`Remove ${item.productName}`}
-                  className="rounded px-2 py-1 text-lg leading-none text-stone-400 hover:bg-red-50 hover:text-red-600"
-                >
-                  ×
                 </button>
               </div>
             </li>
